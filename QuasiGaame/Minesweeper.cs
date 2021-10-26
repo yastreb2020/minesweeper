@@ -26,8 +26,9 @@ namespace QuasiGaame
         /// array with graphical representation of game - just the output
         /// </summary>
         string[,] field;
+        int rows, cols;
         /// <summary>
-        /// what you see a bomb like when you play (and what it is the game array)
+        /// what you see a bomb like when you play (and what it is in the game array)
         /// </summary>
         const string bombSign = "X";
         /// <summary>
@@ -51,10 +52,12 @@ namespace QuasiGaame
             StartMenu();
 
             game = new string[n, m];
-            CreateGame(game, bombs);
+            CreateGame();
             field = CreateField();
+            rows = field.GetUpperBound(0) + 1;
+            cols = field.Length / rows;
             //Console.Clear();
-            UpdateField(field);
+            UpdateField();
             Console.SetCursorPosition(0, 0);
 
 
@@ -81,11 +84,11 @@ namespace QuasiGaame
                         {
                             field[coorI, coorJ] = markSign;
                         }
-                        UpdateField(field);
+                        UpdateField();
                         break;
                     case ConsoleKey.Enter:
                         field[coorI, coorJ] = game[coorI, coorJ];
-                        UpdateField(field);
+                        UpdateField();
                         if (field[coorI, coorJ] == bombSign)
                         {
                             Console.WriteLine("Loser.");
@@ -139,19 +142,15 @@ namespace QuasiGaame
         }
 
         /// <summary>
-        /// checkS the numBER of opened cells of particular type on the field
+        /// checkS the numBER of opened cells of particular type(constants) on the field
         /// </summary>
         //do i need this method?
         int NumOfOpenCells(string type)
         {
-            //do i need to make it common veriables, define them outside of methods?
-            int rows = field.GetUpperBound(0) + 1;
-            int columns = field.Length / rows;
-
             int cnt = 0;
             for (int i = 0; i < rows; i++)
             {
-                for (int j = 0; j < columns; j++)
+                for (int j = 0; j < cols; j++)
                 {
                     if (field[i, j] == type)
                     {
@@ -163,17 +162,19 @@ namespace QuasiGaame
             return cnt;
         }
 
+        /// <summary>
+        /// counts the number of cells opened by a user at the moment
+        /// </summary>
+        /// <returns></returns>
         int NumOfOpenCells()
         {
-            int rows = field.GetUpperBound(0) + 1;
-            int columns = field.Length / rows;
-
             int cnt = 0;
             for (int i = 0; i < rows; i++)
             {
-                for (int j = 0; j < columns; j++)
+                for (int j = 0; j < cols; j++)
                 {
-                    if (field[i, j] != markSign && field[i, j] != voidSign && field[i, j] != userSign) // what about user sign???
+                    // we 
+                    if (field[i, j] != markSign && field[i, j] != voidSign && field[i, j] != userSign)
                     {
                         cnt++;
                     }
@@ -184,7 +185,7 @@ namespace QuasiGaame
         }
 
         // create a method for losing/winning
-
+        // do i need those two?.. for the future?.. like keeping records?
         void GameLost()
         {
             Console.WriteLine("\nYou've lost! Don't get upset - you've fought like a real warrior. Try again.");
@@ -239,16 +240,13 @@ namespace QuasiGaame
         /// <param name="field"></param>
         /// <param name="i"></param>
         /// <param name="j"></param>
-        private void UpdateField(string[,] field)
+        private void UpdateField()
         {
             Console.Clear();
 
-            int rows = field.GetUpperBound(0) + 1;
-            int columns = field.Length / rows;
-
             for (int i = 0; i < rows; i++)
             {
-                for (int j = 0; j < columns; j++)
+                for (int j = 0; j < cols; j++)
                 {
                     Console.Write(field[i, j] + " ");
                 }
@@ -290,23 +288,21 @@ namespace QuasiGaame
             // whem moving, you (almost!) always look like "*"
             if (field[coorI, coorJ] == voidSign)
                 field[coorI, coorJ] = userSign;
-            UpdateField(field);
+            UpdateField();
         }
 
         
         /// <summary>
         /// create array game field with bombs
         /// </summary>
-        /// <param name="field"></param>
-        /// <param name="b"></param>
-        void CreateGame(string[,] field, int b)
+        void CreateGame()
         {
             int rows = field.GetUpperBound(0) + 1;
             int columns = field.Length / rows;
 
             Random rand = new Random();
 
-            for (int i = 0; i < b; i++)
+            for (int i = 0; i < bombs; i++)
             {
                 field[rand.Next(0, rows - 1), rand.Next(0, columns - 1)] = bombSign;
             }
@@ -332,11 +328,11 @@ namespace QuasiGaame
 
 
         /*ЧТО НЕ ТАК:
-         * неверно расставились числа -исправлено
+         * неверно расставились числа +
          * хочу чтобы как-то отражалось, где я нахожусь, когда на числах (можно настроить цвет?)
          * написать правила игры, описание клавиши
-         * добавить отметку потенциальных бомб пользователем
-         * добавить выход в главное меню
+         * добавить отметку потенциальных бомб пользователем +
+         * добавить выход в главное меню + (только в конце игры)
          * режим паузы в перспективе
          * добавить возможность изменить выбор режима игры
          * добавить время игры
@@ -344,12 +340,13 @@ namespace QuasiGaame
          * сохранение очков в перспективе
          * выводить номер бомб
          * номер найденных бомб
-         * настроить победу
+         * настроить победу +
          * сделать победу красивой
          * начальная позиция поля: сделать отметку курсора
          * обработка ошибок
          * Console.Beep() при проигрыше и выигрыше :))))
          * журнализация?
+         * добавить выход из меню
         */
 
 
