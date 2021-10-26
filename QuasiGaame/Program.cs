@@ -7,7 +7,7 @@ namespace QuasiGaame
         static void Main(string[] args)
         {
             var game = new Minesweeper();
-            
+            game.StartGame();
         }
 
         

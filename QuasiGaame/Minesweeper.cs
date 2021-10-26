@@ -18,17 +18,41 @@ namespace QuasiGaame
         /// game mode name
         /// </summary>
         string mode = "";
+        /// <summary>
+        /// array with info about bombs and nums - logic of game
+        /// </summary>
+        string[,] game;
+        /// <summary>
+        /// array with graphical representation of game - just the output
+        /// </summary>
+        string[,] field;
+        /// <summary>
+        /// what you see a bomb like when you play (and what it is the game array)
+        /// </summary>
+        const string bombSign = "X";
+        /// <summary>
+        /// what user looks like when he/she moves around the field
+        /// </summary>
+        const string userSign = "*";
+        /// <summary>
+        /// what the cells a user haven't opened yet look like
+        /// </summary>
+        const string voidSign = ".";
+        /// <summary>
+        /// what user see when he/she wants to mark a cell like a potential bomb place
+        /// </summary>
+        const string markSign = "?";
 
         /// <summary>
-        /// Constructor which starts a game
+        /// Starts a game
         /// </summary>
-        public Minesweeper()
+        public void StartGame()
         {
             StartMenu();
 
-            string[,] game = new string[n, m]; //array with info about bombs and nums
+            game = new string[n, m];
             CreateGame(game, bombs);
-            string[,] field = CreateField(n, m); // array with graphical representation of game
+            field = CreateField();
             //Console.Clear();
             UpdateField(field);
             Console.SetCursorPosition(0, 0);
@@ -49,18 +73,32 @@ namespace QuasiGaame
                 switch (keyinfo.Key)
                 {
                     case ConsoleKey.Spacebar:
+                        if (field[coorI, coorJ] == markSign)
+                        {
+                            field[coorI, coorJ] = voidSign;
+                        }
+                        else
+                        {
+                            field[coorI, coorJ] = markSign;
+                        }
+                        UpdateField(field);
+                        break;
                     case ConsoleKey.Enter:
                         field[coorI, coorJ] = game[coorI, coorJ];
                         UpdateField(field);
-                        if (field[coorI, coorJ] == "X")
+                        if (field[coorI, coorJ] == bombSign)
+                        {
                             Console.WriteLine("Loser.");
+                            // + stop counts
+                            GameLost();
+                        }
                         break;
                     case ConsoleKey.A:
                     case ConsoleKey.LeftArrow:
                         if (coorJ > 0)
                         {
                             coorJ--;
-                            Move(field, coorI, coorJ, lastCoorI, lastCoorJ);
+                            Move(coorI, coorJ, lastCoorI, lastCoorJ);
                         }
                         break;
                     case ConsoleKey.D:
@@ -68,7 +106,7 @@ namespace QuasiGaame
                         if (coorJ < m - 1)
                         {
                             coorJ++;
-                            Move(field, coorI, coorJ, lastCoorI, lastCoorJ);
+                            Move(coorI, coorJ, lastCoorI, lastCoorJ);
                         }
                         break;
                     case ConsoleKey.W:
@@ -76,7 +114,7 @@ namespace QuasiGaame
                         if (coorI > 0)
                         {
                             coorI--;
-                            Move(field, coorI, coorJ, lastCoorI, lastCoorJ);
+                            Move(coorI, coorJ, lastCoorI, lastCoorJ);
                         }
                         break;
                     case ConsoleKey.S:
@@ -84,7 +122,7 @@ namespace QuasiGaame
                         if (coorI < n - 1)
                         {
                             coorI++;
-                            Move(field, coorI, coorJ, lastCoorI, lastCoorJ);
+                            Move(coorI, coorJ, lastCoorI, lastCoorJ);
                         }
                         break;
                     case ConsoleKey.X:
@@ -92,7 +130,77 @@ namespace QuasiGaame
                         break;
 
                 }
+                // is the number of opened cells equals the number of cells - number of bombs - number of marksignes?
+                if (n*m - NumOfOpenCells(bombSign) - NumOfOpenCells(markSign) == NumOfOpenCells())
+                {
+                    GameWon();
+                }
             }
+        }
+
+        /// <summary>
+        /// checkS the numBER of opened cells of particular type on the field
+        /// </summary>
+        //do i need this method?
+        int NumOfOpenCells(string type)
+        {
+            //do i need to make it common veriables, define them outside of methods?
+            int rows = field.GetUpperBound(0) + 1;
+            int columns = field.Length / rows;
+
+            int cnt = 0;
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    if (field[i, j] == type)
+                    {
+                        cnt++;
+                    }
+                }
+            }
+
+            return cnt;
+        }
+
+        int NumOfOpenCells()
+        {
+            int rows = field.GetUpperBound(0) + 1;
+            int columns = field.Length / rows;
+
+            int cnt = 0;
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    if (field[i, j] != markSign && field[i, j] != voidSign && field[i, j] != userSign) // what about user sign???
+                    {
+                        cnt++;
+                    }
+                }
+            }
+
+            return cnt;
+        }
+
+        // create a method for losing/winning
+
+        void GameLost()
+        {
+            Console.WriteLine("\nYou've lost! Don't get upset - you've fought like a real warrior. Try again.");
+            Console.WriteLine("Press any key to escape to the main menu.");
+            Console.ReadKey();
+            Console.Clear();
+            StartGame();
+        }
+
+        void GameWon()
+        {
+            Console.WriteLine("Congrats! You won! Wanna show off again?");
+            Console.WriteLine("Press any key to escape to the main menu.");
+            Console.ReadKey();
+            Console.Clear();
+            StartGame();
         }
 
         /// <summary>
@@ -100,7 +208,7 @@ namespace QuasiGaame
         /// </summary>
         private void StartMenu()
         {
-            Console.WriteLine("Choose your mode:\n1 - Easy\n2 - Normal\n3 - Hard");
+            Console.WriteLine("Choose your mode:\n1 - Easy\n2 - Normal\n3 - Hard\n(For exit press Esc)");
             switch (Console.ReadLine())
             {
                 default:
@@ -151,17 +259,14 @@ namespace QuasiGaame
         /// <summary>
         /// Shows the starting game field
         /// </summary>
-        /// <param name="n"></param>
-        /// <param name="m"></param>
-        /// <param name="b"></param>
-        string[,] CreateField(int n, int m)
+        string[,] CreateField()
         {
             string[,] field = new string[n, m];
             for (int i = 0; i < n; i++)
             {
                 for (int j = 0; j < m; j++)
                 {
-                    field[i, j] = ".";
+                    field[i, j] = voidSign;
                 }
             }
             return field;
@@ -170,22 +275,21 @@ namespace QuasiGaame
         /// <summary>
         /// Displays user moves on the field when he/she goes from one dot to another
         /// </summary>
-        /// <param name="field"></param>
         /// <param name="coorI"></param>
         /// <param name="coorJ"></param>
         /// <param name="lastCoorI"></param>
         /// <param name="lastCoorJ"></param>
-        void Move(string[,] field, int coorI, int coorJ, int lastCoorI, int lastCoorJ)
+        void Move(int coorI, int coorJ, int lastCoorI, int lastCoorJ)
         {
             // if you haven't opened any cell before moving, you'll leave a dot behind
-            if (field[lastCoorI, lastCoorJ] == "*")
+            if (field[lastCoorI, lastCoorJ] == userSign)
             {
-                field[lastCoorI, lastCoorJ] = ".";
+                field[lastCoorI, lastCoorJ] = voidSign;
             }
 
             // whem moving, you (almost!) always look like "*"
-            if (field[coorI, coorJ] == ".")
-                field[coorI, coorJ] = "*";
+            if (field[coorI, coorJ] == voidSign)
+                field[coorI, coorJ] = userSign;
             UpdateField(field);
         }
 
@@ -204,23 +308,23 @@ namespace QuasiGaame
 
             for (int i = 0; i < b; i++)
             {
-                field[rand.Next(0, rows - 1), rand.Next(0, columns - 1)] = "X";
+                field[rand.Next(0, rows - 1), rand.Next(0, columns - 1)] = bombSign;
             }
 
             for (int i = 0; i < rows; i++)
             {
                 for (int j = 0; j < columns; j++)
                 {
-                    if (field[i, j] == "X") continue;
+                    if (field[i, j] == bombSign) continue;
                     int sum = 0;
-                    if (i > 0 && field[i - 1, j] == "X") sum++;
-                    if (i < rows - 1 && field[i + 1, j] == "X") sum++;
-                    if (j > 0 && field[i, j - 1] == "X") sum++;
-                    if (j < columns - 1 && field[i, j + 1] == "X") sum++;
-                    if (i > 0 && j > 0 && field[i - 1, j - 1] == "X") sum++;
-                    if (i < rows - 1 && j < columns - 1 && field[i + 1, j + 1] == "X") sum++;
-                    if (i > 0 && j < columns - 1 && field[i - 1, j + 1] == "X") sum++;
-                    if (i < rows - 1 && j > 0 && field[i + 1, j - 1] == "X") sum++;
+                    if (i > 0 && field[i - 1, j] == bombSign) sum++;
+                    if (i < rows - 1 && field[i + 1, j] == bombSign) sum++;
+                    if (j > 0 && field[i, j - 1] == bombSign) sum++;
+                    if (j < columns - 1 && field[i, j + 1] == bombSign) sum++;
+                    if (i > 0 && j > 0 && field[i - 1, j - 1] == bombSign) sum++;
+                    if (i < rows - 1 && j < columns - 1 && field[i + 1, j + 1] == bombSign) sum++;
+                    if (i > 0 && j < columns - 1 && field[i - 1, j + 1] == bombSign) sum++;
+                    if (i < rows - 1 && j > 0 && field[i + 1, j - 1] == bombSign) sum++;
                     field[i, j] = sum.ToString();
                 }
             }
@@ -248,16 +352,6 @@ namespace QuasiGaame
          * журнализация?
         */
 
-        //onClick when the user hits enter
-        //if it's a bomb the game is stopped, if not, it shows
-        /*
-        static void OnClick(string[,] field, string[,] game, int coorI, int coorJ)
-        {
-            
-        }
-        */
-
-        //when the user moves around the field
 
     }
 }
