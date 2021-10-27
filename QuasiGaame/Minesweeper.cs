@@ -7,9 +7,9 @@ namespace QuasiGaame
     class Minesweeper
     {
         /// <summary>
-        /// field size, n - rows, m - columns
+        /// field size, rows and columns
         /// </summary>
-        int n, m;
+        int rows, cols;
         /// <summary>
         /// number of bombs
         /// </summary>
@@ -26,7 +26,7 @@ namespace QuasiGaame
         /// array with graphical representation of game - just the output
         /// </summary>
         string[,] field;
-        int rows, cols;
+        
         /// <summary>
         /// what you see a bomb like when you play (and what it is in the game array)
         /// </summary>
@@ -45,18 +45,22 @@ namespace QuasiGaame
         const string markSign = "?";
 
         /// <summary>
+        /// used to save a foreground color before changing and return to it after
+        /// </summary>
+        ConsoleColor mainColor = new ConsoleColor();
+
+        int numOfOpenCells = 0;
+
+        /// <summary>
         /// Starts a game
         /// </summary>
         public void StartGame()
         {
             StartMenu();
 
-            game = new string[n, m];
+            game = new string[rows, cols];
             CreateGame();
-            field = CreateField();
-            rows = field.GetUpperBound(0) + 1;
-            cols = field.Length / rows;
-            //Console.Clear();
+            CreateField();
             UpdateField();
             Console.SetCursorPosition(0, 0);
 
@@ -75,19 +79,23 @@ namespace QuasiGaame
                 lastCoorJ = coorJ;
                 switch (keyinfo.Key)
                 {
+                    // here's the logic of marking potential bombs on hitting spacebar
                     case ConsoleKey.Spacebar:
                         if (field[coorI, coorJ] == markSign)
                         {
-                            field[coorI, coorJ] = voidSign;
+                            field[coorI, coorJ] = userSign;
                         }
-                        else
+                        else if (field[coorI, coorJ] == userSign)
                         {
                             field[coorI, coorJ] = markSign;
                         }
+                        else break; // you won't see any changes if you hit a spacebar on an opened cell
                         UpdateField();
                         break;
+                    // here's the logic of openening a cell a user is on, after he/she hits an enter
                     case ConsoleKey.Enter:
                         field[coorI, coorJ] = game[coorI, coorJ];
+                        numOfOpenCells++; //we opened one more cell!
                         UpdateField();
                         if (field[coorI, coorJ] == bombSign)
                         {
@@ -106,7 +114,7 @@ namespace QuasiGaame
                         break;
                     case ConsoleKey.D:
                     case ConsoleKey.RightArrow:
-                        if (coorJ < m - 1)
+                        if (coorJ < cols - 1)
                         {
                             coorJ++;
                             Move(coorI, coorJ, lastCoorI, lastCoorJ);
@@ -122,7 +130,7 @@ namespace QuasiGaame
                         break;
                     case ConsoleKey.S:
                     case ConsoleKey.DownArrow:
-                        if (coorI < n - 1)
+                        if (coorI < rows - 1)
                         {
                             coorI++;
                             Move(coorI, coorJ, lastCoorI, lastCoorJ);
@@ -130,17 +138,26 @@ namespace QuasiGaame
                         break;
                     case ConsoleKey.X:
                     case ConsoleKey.Escape:
+                        //exit from the game, close the window
                         break;
 
                 }
-                // is the number of opened cells equals the number of cells - number of bombs - number of marksignes?
-                if (n*m - NumOfOpenCells(bombSign) - NumOfOpenCells(markSign) == NumOfOpenCells())
+                
+                if(numOfOpenCells == rows * cols - GetNumOfBombs())
                 {
                     GameWon();
                 }
+
+                // is the number of opened cells equals the number of cells - number of bombs - number of marksignes?
+                /*if (rows*cols - NumOfOpenCells(bombSign) - NumOfOpenCells(markSign) == NumOfOpenCells())
+                {
+                    GameWon();
+                }
+                */
             }
         }
 
+        /*
         /// <summary>
         /// checkS the numBER of opened cells of particular type(constants) on the field
         /// </summary>
@@ -183,6 +200,7 @@ namespace QuasiGaame
 
             return cnt;
         }
+        */
 
         // create a method for losing/winning
         // do i need those two?.. for the future?.. like keeping records?
@@ -197,7 +215,7 @@ namespace QuasiGaame
 
         void GameWon()
         {
-            Console.WriteLine("Congrats! You won! Wanna show off again?");
+            Console.WriteLine("Congrats! You've won! Wanna show off again?");
             Console.WriteLine("Press any key to escape to the main menu.");
             Console.ReadKey();
             Console.Clear();
@@ -214,17 +232,17 @@ namespace QuasiGaame
             {
                 default:
                 case "1":
-                    n = 5; m = 5;
+                    rows = 5; cols = 5;
                     bombs = 5;
                     mode = "Easy";
                     break;
                 case "2":
-                    n = 10; m = 10;
+                    rows = 10; cols = 10;
                     bombs = 20;
                     mode = "Normal";
                     break;
                 case "3":
-                    n = 25; m = 50;
+                    rows = 25; cols = 50;
                     bombs = 100;
                     mode = "Hard";
                     break;
@@ -237,9 +255,6 @@ namespace QuasiGaame
         /// <summary>
         /// updates field after each user input: clears and then draws updated game field
         /// </summary>
-        /// <param name="field"></param>
-        /// <param name="i"></param>
-        /// <param name="j"></param>
         private void UpdateField()
         {
             Console.Clear();
@@ -248,6 +263,45 @@ namespace QuasiGaame
             {
                 for (int j = 0; j < cols; j++)
                 {
+                    switch(field[i, j])
+                    {
+                        case userSign:
+                            Console.ForegroundColor = ConsoleColor.Magenta;
+                            break;
+                        case markSign:
+                            Console.ForegroundColor = ConsoleColor.DarkYellow;
+                            break;
+                        case "0":
+                            Console.ForegroundColor = ConsoleColor.DarkCyan;
+                            break;
+                        case "1":
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            break;
+                        case "2":
+                            Console.ForegroundColor = ConsoleColor.DarkGreen;
+                            break;
+                        case "3":
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            break;
+                        case "4":
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            break;
+                        case "5":
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                            break;
+                        case "6":
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            break;
+                        case "7":
+                            Console.ForegroundColor = ConsoleColor.DarkYellow;
+                            break;
+                        case "8":
+                            Console.ForegroundColor = ConsoleColor.DarkRed;
+                            break;
+                        default:
+                            Console.ForegroundColor = ConsoleColor.White;
+                            break;
+                    }
                     Console.Write(field[i, j] + " ");
                 }
                 Console.WriteLine();
@@ -257,17 +311,16 @@ namespace QuasiGaame
         /// <summary>
         /// Shows the starting game field
         /// </summary>
-        string[,] CreateField()
+        void CreateField()
         {
-            string[,] field = new string[n, m];
-            for (int i = 0; i < n; i++)
+            field = new string[rows, cols];
+            for (int i = 0; i < rows; i++)
             {
-                for (int j = 0; j < m; j++)
+                for (int j = 0; j < cols; j++)
                 {
                     field[i, j] = voidSign;
                 }
             }
-            return field;
         }
 
         /// <summary>
@@ -288,6 +341,14 @@ namespace QuasiGaame
             // whem moving, you (almost!) always look like "*"
             if (field[coorI, coorJ] == voidSign)
                 field[coorI, coorJ] = userSign;
+            else
+            {
+                //we change the console color and reverse the change everytime the user wants to move in open/marked cells area
+                mainColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                //some code
+                Console.ForegroundColor = mainColor;
+            }
             UpdateField();
         }
 
@@ -297,33 +358,44 @@ namespace QuasiGaame
         /// </summary>
         void CreateGame()
         {
-            int rows = field.GetUpperBound(0) + 1;
-            int columns = field.Length / rows;
-
             Random rand = new Random();
 
             for (int i = 0; i < bombs; i++)
             {
-                field[rand.Next(0, rows - 1), rand.Next(0, columns - 1)] = bombSign;
+                game[rand.Next(0, rows - 1), rand.Next(0, cols - 1)] = bombSign;
             }
 
             for (int i = 0; i < rows; i++)
             {
-                for (int j = 0; j < columns; j++)
+                for (int j = 0; j < cols; j++)
                 {
-                    if (field[i, j] == bombSign) continue;
+                    if (game[i, j] == bombSign) continue;
                     int sum = 0;
-                    if (i > 0 && field[i - 1, j] == bombSign) sum++;
-                    if (i < rows - 1 && field[i + 1, j] == bombSign) sum++;
-                    if (j > 0 && field[i, j - 1] == bombSign) sum++;
-                    if (j < columns - 1 && field[i, j + 1] == bombSign) sum++;
-                    if (i > 0 && j > 0 && field[i - 1, j - 1] == bombSign) sum++;
-                    if (i < rows - 1 && j < columns - 1 && field[i + 1, j + 1] == bombSign) sum++;
-                    if (i > 0 && j < columns - 1 && field[i - 1, j + 1] == bombSign) sum++;
-                    if (i < rows - 1 && j > 0 && field[i + 1, j - 1] == bombSign) sum++;
-                    field[i, j] = sum.ToString();
+                    if (i > 0 && game[i - 1, j] == bombSign) sum++;
+                    if (i < rows - 1 && game[i + 1, j] == bombSign) sum++;
+                    if (j > 0 && game[i, j - 1] == bombSign) sum++;
+                    if (j < cols - 1 && game[i, j + 1] == bombSign) sum++;
+                    if (i > 0 && j > 0 && game[i - 1, j - 1] == bombSign) sum++;
+                    if (i < rows - 1 && j < cols - 1 && game[i + 1, j + 1] == bombSign) sum++;
+                    if (i > 0 && j < cols - 1 && game[i - 1, j + 1] == bombSign) sum++;
+                    if (i < rows - 1 && j > 0 && game[i + 1, j - 1] == bombSign) sum++;
+                    game[i, j] = sum.ToString();
                 }
             }
+        }
+
+        int GetNumOfBombs()
+        {
+            int cnt = 0;
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    if (game[i, j] == bombSign)
+                        cnt++;
+                }
+            }
+            return cnt;
         }
 
 
@@ -347,6 +419,10 @@ namespace QuasiGaame
          * Console.Beep() при проигрыше и выигрыше :))))
          * журнализация?
          * добавить выход из меню
+         * что такое гейм что такое филд, пересмотреть все методы
+         * победа не работает, когда ? больше чем нужно +
+         * нули сами открывались чтобы автоматически, когда на один из них зашел
+         * число бомб рандомно не всегда совпадает с заданным
         */
 
 
