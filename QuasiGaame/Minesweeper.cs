@@ -51,6 +51,10 @@ namespace QuasiGaame
 
         int numOfOpenCells = 0;
 
+        // user coordinates
+        int lastCoorI = 0, lastCoorJ = 0;
+        int coorI = 0, coorJ = 0;
+
         /// <summary>
         /// Starts a game
         /// </summary>
@@ -63,12 +67,6 @@ namespace QuasiGaame
             CreateField();
             UpdateField();
             Console.SetCursorPosition(0, 0);
-
-
-            // user coordinates
-            int lastCoorI = 0, lastCoorJ = 0;
-            int coorI = 0, coorJ = 0;
-
 
             ConsoleKeyInfo keyinfo;
 
@@ -109,7 +107,7 @@ namespace QuasiGaame
                         if (coorJ > 0)
                         {
                             coorJ--;
-                            Move(coorI, coorJ, lastCoorI, lastCoorJ);
+                            Move();
                         }
                         break;
                     case ConsoleKey.D:
@@ -117,7 +115,7 @@ namespace QuasiGaame
                         if (coorJ < cols - 1)
                         {
                             coorJ++;
-                            Move(coorI, coorJ, lastCoorI, lastCoorJ);
+                            Move();
                         }
                         break;
                     case ConsoleKey.W:
@@ -125,7 +123,7 @@ namespace QuasiGaame
                         if (coorI > 0)
                         {
                             coorI--;
-                            Move(coorI, coorJ, lastCoorI, lastCoorJ);
+                            Move();
                         }
                         break;
                     case ConsoleKey.S:
@@ -133,7 +131,7 @@ namespace QuasiGaame
                         if (coorI < rows - 1)
                         {
                             coorI++;
-                            Move(coorI, coorJ, lastCoorI, lastCoorJ);
+                            Move();
                         }
                         break;
                     case ConsoleKey.X:
@@ -302,6 +300,18 @@ namespace QuasiGaame
                             Console.ForegroundColor = ConsoleColor.White;
                             break;
                     }
+
+                    //special color for the place user is in
+                    if(i == coorI && j == coorJ)
+                    {
+                        mainColor = Console.ForegroundColor;
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Write(field[i, j] + " ");
+                        Console.ForegroundColor = mainColor;
+                        continue;
+                    }
+
+                    // for all other cells we just need to print them
                     Console.Write(field[i, j] + " ");
                 }
                 Console.WriteLine();
@@ -326,11 +336,7 @@ namespace QuasiGaame
         /// <summary>
         /// Displays user moves on the field when he/she goes from one dot to another
         /// </summary>
-        /// <param name="coorI"></param>
-        /// <param name="coorJ"></param>
-        /// <param name="lastCoorI"></param>
-        /// <param name="lastCoorJ"></param>
-        void Move(int coorI, int coorJ, int lastCoorI, int lastCoorJ)
+        void Move()
         {
             // if you haven't opened any cell before moving, you'll leave a dot behind
             if (field[lastCoorI, lastCoorJ] == userSign)
@@ -341,14 +347,6 @@ namespace QuasiGaame
             // whem moving, you (almost!) always look like "*"
             if (field[coorI, coorJ] == voidSign)
                 field[coorI, coorJ] = userSign;
-            else
-            {
-                //we change the console color and reverse the change everytime the user wants to move in open/marked cells area
-                mainColor = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                //some code
-                Console.ForegroundColor = mainColor;
-            }
             UpdateField();
         }
 
