@@ -54,6 +54,9 @@ namespace QuasiGaame
         /// </summary>
         int numOfOpenCells;
 
+        int numOfBombs;
+        int numOfMarks;
+
         /// <summary>
         /// prevoius user coordinates on a field
         /// </summary>
@@ -64,17 +67,33 @@ namespace QuasiGaame
         int coorI, coorJ;
 
         /// <summary>
+        /// initialization of game variables
+        /// </summary>
+        void GameInit()
+        {
+            game = new string[rows, cols];
+            CreateGame();
+            coorI = 0;
+            coorJ = 0;
+            lastCoorI = 0;
+            lastCoorJ = 0;
+            numOfOpenCells = 0;
+            numOfBombs = GetNumOfBombs();
+            numOfMarks = 0;
+            CreateField();
+            UpdateField();
+            Console.SetCursorPosition(0, 0);
+        }
+
+        /// <summary>
         /// Starts a game
         /// </summary>
         public void StartGame()
         {
             StartMenu();
 
-            game = new string[rows, cols];
-            CreateGame();
-            CreateField();
-            UpdateField();
-            Console.SetCursorPosition(0, 0);
+            GameInit();
+
 
             ConsoleKeyInfo keyinfo;
 
@@ -90,16 +109,25 @@ namespace QuasiGaame
                         if (field[coorI, coorJ] == markSign)
                         {
                             field[coorI, coorJ] = userSign;
+                            numOfMarks--;
                         }
                         else if (field[coorI, coorJ] == userSign)
                         {
                             field[coorI, coorJ] = markSign;
+                            numOfMarks++;
                         }
                         else break; // you won't see any changes if you hit a spacebar on an opened cell
                         UpdateField();
                         break;
+
                     // here's the logic of openening a cell a user is on, after he/she hits an enter
                     case ConsoleKey.Enter:
+                        //if it was markSign before we need to decrease their counter
+                        if (field[coorI, coorJ] == markSign)
+                        {
+                            numOfMarks--;
+                        }
+
                         field[coorI, coorJ] = game[coorI, coorJ];
                         numOfOpenCells++; //we opened one more cell!
                         UpdateField();
@@ -118,6 +146,7 @@ namespace QuasiGaame
                             GameLost();
                         }
                         break;
+
                     case ConsoleKey.A:
                     case ConsoleKey.LeftArrow:
                         if (coorJ > 0)
@@ -157,17 +186,11 @@ namespace QuasiGaame
 
                 }
                 
-                if(numOfOpenCells == rows * cols - GetNumOfBombs())
+                if(numOfOpenCells == rows * cols - numOfBombs)
                 {
                     GameWon();
                 }
 
-                // is the number of opened cells equals the number of cells - number of bombs - number of marksignes?
-                /*if (rows*cols - NumOfOpenCells(bombSign) - NumOfOpenCells(markSign) == NumOfOpenCells())
-                {
-                    GameWon();
-                }
-                */
             }
         }
 
@@ -212,52 +235,6 @@ namespace QuasiGaame
                 }
             }
         }
-
-
-        /*
-        /// <summary>
-        /// checkS the numBER of opened cells of particular type(constants) on the field
-        /// </summary>
-        //do i need this method?
-        int NumOfOpenCells(string type)
-        {
-            int cnt = 0;
-            for (int i = 0; i < rows; i++)
-            {
-                for (int j = 0; j < cols; j++)
-                {
-                    if (field[i, j] == type)
-                    {
-                        cnt++;
-                    }
-                }
-            }
-
-            return cnt;
-        }
-
-        /// <summary>
-        /// counts the number of cells opened by a user at the moment
-        /// </summary>
-        /// <returns></returns>
-        int NumOfOpenCells()
-        {
-            int cnt = 0;
-            for (int i = 0; i < rows; i++)
-            {
-                for (int j = 0; j < cols; j++)
-                {
-                    // we 
-                    if (field[i, j] != markSign && field[i, j] != voidSign && field[i, j] != userSign)
-                    {
-                        cnt++;
-                    }
-                }
-            }
-
-            return cnt;
-        }
-        */
 
         // create a method for losing/winning
         // do i need those two?.. for the future?.. like keeping records?
@@ -304,11 +281,6 @@ namespace QuasiGaame
                     mode = "Hard";
                     break;
             }
-            coorI = 0;
-            coorJ = 0;
-            lastCoorI = 0;
-            lastCoorJ = 0;
-            numOfOpenCells = 0;
             Console.WriteLine($"You have chosen {mode} mode. Press any key to continue.");
             //user can rechoose
             Console.ReadKey();
@@ -377,6 +349,8 @@ namespace QuasiGaame
                 }
                 Console.WriteLine();
             }
+
+            Console.WriteLine($"Mines Total: {numOfBombs} \t Mines Marked: {numOfMarks}");
         }
 
         /// <summary>
@@ -480,7 +454,7 @@ namespace QuasiGaame
          * добавить выход из меню
          * что такое гейм что такое филд, пересмотреть все методы
          * победа не работает, когда ? больше чем нужно +
-         * нули сами открывались чтобы автоматически, когда на один из них зашел
+         * нули сами открывались чтобы автоматически, когда на один из них зашел +
          * число бомб рандомно не всегда совпадает с заданным
         */
 
