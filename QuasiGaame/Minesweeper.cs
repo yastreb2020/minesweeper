@@ -47,13 +47,21 @@ namespace QuasiGaame
         /// <summary>
         /// used to save a foreground color before changing and return to it after
         /// </summary>
-        ConsoleColor mainColor = new ConsoleColor();
+        //ConsoleColor mainColor = new ConsoleColor();
 
-        int numOfOpenCells = 0;
+        /// <summary>
+        /// the number of cells that a user have opened so far
+        /// </summary>
+        int numOfOpenCells;
 
-        // user coordinates
-        int lastCoorI = 0, lastCoorJ = 0;
-        int coorI = 0, coorJ = 0;
+        /// <summary>
+        /// prevoius user coordinates on a field
+        /// </summary>
+        int lastCoorI, lastCoorJ;
+        /// <summary>
+        /// current user coordinates on a field
+        /// </summary>
+        int coorI, coorJ;
 
         /// <summary>
         /// Starts a game
@@ -95,6 +103,14 @@ namespace QuasiGaame
                         field[coorI, coorJ] = game[coorI, coorJ];
                         numOfOpenCells++; //we opened one more cell!
                         UpdateField();
+                        // automatic zero cells opening
+                        if (field[coorI, coorJ] == "0")
+                        {
+                            OpenedZeroCell(coorI, coorJ);
+                            //update once all the cells around
+                            UpdateField();
+                        }
+
                         if (field[coorI, coorJ] == bombSign)
                         {
                             Console.WriteLine("Loser.");
@@ -154,6 +170,49 @@ namespace QuasiGaame
                 */
             }
         }
+
+        /*
+         * i-1, j-1     i-1, j      i-1, j+1
+         * 
+         * i, j-1       [i, j]        i, j+1
+         * 
+         * i+1, j-1     i+1, j      i+1, j+1
+         * */
+
+        void OpenedZeroCell(int i, int j)
+        {
+            // preveting outside of bounds of the array error
+            int lowI, highI, lowJ, highJ;
+            if (i == 0) lowI = 0;
+            else lowI = i - 1;
+            if (i == rows - 1) highI = rows - 1;
+            else highI = i + 1;
+
+            if (j == 0) lowJ = 0;
+            else lowJ = j - 1;
+            if (j == cols - 1) highJ = cols - 1;
+            else highJ = j + 1;
+
+            for (int a = lowI; a <= highI; a++)
+            {
+                for (int b = lowJ; b <= highJ; b++)
+                {
+                    if (field[a, b] != voidSign)
+                        continue;
+                    //we don't need to check the cell we already know is zero
+                    //if (a == i && b == j)
+                    //    continue;
+
+
+                    //for any cell around the known zero, we open it, check if it's a zero and if yes, repeat the same actions
+                    field[a, b] = game[a, b];
+                    numOfOpenCells++; //don't forget to increase the counter
+                    if (field[a, b] == "0")
+                        OpenedZeroCell(a, b);
+                }
+            }
+        }
+
 
         /*
         /// <summary>
@@ -245,6 +304,11 @@ namespace QuasiGaame
                     mode = "Hard";
                     break;
             }
+            coorI = 0;
+            coorJ = 0;
+            lastCoorI = 0;
+            lastCoorJ = 0;
+            numOfOpenCells = 0;
             Console.WriteLine($"You have chosen {mode} mode. Press any key to continue.");
             //user can rechoose
             Console.ReadKey();
@@ -263,9 +327,6 @@ namespace QuasiGaame
                 {
                     switch(field[i, j])
                     {
-                        case userSign:
-                            Console.ForegroundColor = ConsoleColor.Magenta;
-                            break;
                         case markSign:
                             Console.ForegroundColor = ConsoleColor.DarkYellow;
                             break;
@@ -304,10 +365,10 @@ namespace QuasiGaame
                     //special color for the place user is in
                     if(i == coorI && j == coorJ)
                     {
-                        mainColor = Console.ForegroundColor;
-                        Console.ForegroundColor = ConsoleColor.Red;
+                        //mainColor = Console.ForegroundColor;
+                        Console.ForegroundColor = ConsoleColor.Magenta;
                         Console.Write(field[i, j] + " ");
-                        Console.ForegroundColor = mainColor;
+                        //Console.ForegroundColor = mainColor;
                         continue;
                     }
 
@@ -399,7 +460,7 @@ namespace QuasiGaame
 
         /*ЧТО НЕ ТАК:
          * неверно расставились числа +
-         * хочу чтобы как-то отражалось, где я нахожусь, когда на числах (можно настроить цвет?)
+         * хочу чтобы как-то отражалось, где я нахожусь, когда на числах (можно настроить цвет?) +
          * написать правила игры, описание клавиши
          * добавить отметку потенциальных бомб пользователем +
          * добавить выход в главное меню + (только в конце игры)
