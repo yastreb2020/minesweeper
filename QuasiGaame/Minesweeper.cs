@@ -186,11 +186,10 @@ namespace QuasiGaame
                             Move();
                         }
                         break;
+                    case ConsoleKey.P:
                     case ConsoleKey.X:
                     case ConsoleKey.Escape:
-                        //exit from the game, close the window
-                        Log.CloseAndFlush();
-                        Environment.Exit(0);
+                        Pause();
                         break;
 
                 }
@@ -270,6 +269,7 @@ namespace QuasiGaame
         /// </summary>
         private void StartMenu()
         {
+            Console.Clear();
             Console.WriteLine("Choose your mode:\n1 - Easy\n2 - Normal\n3 - Hard\n(For exit press Esc)");
             switch (Console.ReadKey().Key)
             {
@@ -363,6 +363,7 @@ namespace QuasiGaame
                 Console.WriteLine();
             }
 
+            Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine($"Mines Total: {numOfBombs} \t Mines Marked: {numOfMarks}");
         }
 
@@ -444,6 +445,32 @@ namespace QuasiGaame
             return cnt;
         }
 
+        string pauseSign = "*";
+
+        void Pause()
+        {
+            Console.Clear();
+            for(int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    Console.Write(pauseSign + " ");
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine("\nYou're in a pause mode. Press Enter to continue.");
+            Console.WriteLine("To escape to the main menu and finish the game press Esc.");
+
+            switch(Console.ReadKey().Key)
+            {
+                case ConsoleKey.Enter:
+                    UpdateField();
+                    break;
+                case ConsoleKey.Escape:
+                    StartMenu();
+                    break;
+            }
+        }
 
         /*ЧТО НЕ ТАК:
          * написать правила игры, описание клавиши
