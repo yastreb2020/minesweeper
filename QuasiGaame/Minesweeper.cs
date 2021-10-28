@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Serilog;
 
 namespace QuasiGaame
 {
@@ -90,10 +91,16 @@ namespace QuasiGaame
         /// </summary>
         public void StartGame()
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.File("logs/myapp.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
+
+            Log.Information("Ah, there you are!");
+
+
             StartMenu();
-
             GameInit();
-
 
             ConsoleKeyInfo keyinfo;
 
@@ -182,6 +189,8 @@ namespace QuasiGaame
                     case ConsoleKey.X:
                     case ConsoleKey.Escape:
                         //exit from the game, close the window
+                        Log.CloseAndFlush();
+                        Environment.Exit(0);
                         break;
 
                 }
@@ -262,28 +271,32 @@ namespace QuasiGaame
         private void StartMenu()
         {
             Console.WriteLine("Choose your mode:\n1 - Easy\n2 - Normal\n3 - Hard\n(For exit press Esc)");
-            switch (Console.ReadLine())
+            switch (Console.ReadKey().Key)
             {
                 default:
-                case "1":
+                case ConsoleKey.D1:
                     rows = 5; cols = 5;
                     bombs = 5;
                     mode = "Easy";
                     break;
-                case "2":
+                case ConsoleKey.D2:
                     rows = 10; cols = 10;
                     bombs = 20;
                     mode = "Normal";
                     break;
-                case "3":
+                case ConsoleKey.D3:
                     rows = 25; cols = 50;
                     bombs = 100;
                     mode = "Hard";
                     break;
+                case ConsoleKey.Escape:
+                    Environment.Exit(0);
+                    break;
             }
-            Console.WriteLine($"You have chosen {mode} mode. Press any key to continue.");
-            //user can rechoose
-            Console.ReadKey();
+            Console.WriteLine($"You have chosen {mode} mode. Goodluck!");
+            System.Threading.Thread.Sleep(100);
+            //user can rechoose ?
+            //Console.ReadKey();
         }
 
         /// <summary>
@@ -433,28 +446,18 @@ namespace QuasiGaame
 
 
         /*ЧТО НЕ ТАК:
-         * неверно расставились числа +
-         * хочу чтобы как-то отражалось, где я нахожусь, когда на числах (можно настроить цвет?) +
          * написать правила игры, описание клавиши
-         * добавить отметку потенциальных бомб пользователем +
-         * добавить выход в главное меню + (только в конце игры)
          * режим паузы в перспективе
          * добавить возможность изменить выбор режима игры
          * добавить время игры
          * добавить систему очков
          * сохранение очков в перспективе
-         * выводить номер бомб
-         * номер найденных бомб
-         * настроить победу +
          * сделать победу красивой
-         * начальная позиция поля: сделать отметку курсора
          * обработка ошибок
          * Console.Beep() при проигрыше и выигрыше :))))
          * журнализация?
          * добавить выход из меню
          * что такое гейм что такое филд, пересмотреть все методы
-         * победа не работает, когда ? больше чем нужно +
-         * нули сами открывались чтобы автоматически, когда на один из них зашел +
          * число бомб рандомно не всегда совпадает с заданным
         */
 
