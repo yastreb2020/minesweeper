@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Serilog;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace QuasiGaame
 {
@@ -73,6 +72,8 @@ namespace QuasiGaame
 
         Stopwatch stopwatch = new Stopwatch();
 
+        string writePath = @"score.txt";
+
         /// <summary>
         /// initialization of game variables
         /// </summary>
@@ -92,6 +93,7 @@ namespace QuasiGaame
             Console.SetCursorPosition(0, 0);
 
         }
+
 
         /// <summary>
         /// Starts a game
@@ -267,12 +269,62 @@ namespace QuasiGaame
 
         void GameWon()
         {
+            ScoreToFile(stopwatch.Elapsed.ToString());
+
             Log.Information("Game won in {0:hh\\:mm\\:ss}", stopwatch.Elapsed);
+            
+            GetScoreFromFile();
+            
             Console.WriteLine("Congrats! You've won! Wanna show off again?");
-            Console.WriteLine("Press any key to escape to the main menu.");
+            Console.WriteLine("\nPress any key to escape to the main menu.");
+
             Console.ReadKey();
             Console.Clear();
+
             StartGame();
+        }
+
+        async void ScoreToFile(string info)
+        {
+            // we write there every victory
+            try
+            {
+                using (StreamWriter sw = new StreamWriter(writePath, true, System.Text.Encoding.Default))
+                {
+                    await sw.WriteLineAsync($"{info}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Trying to write to {writePath} file: {ex}");
+            }
+        }
+
+        async void GetScoreFromFile()
+        {
+            //reading from file and writing the result
+            try
+            {
+                using (StreamReader sr = new StreamReader(writePath, System.Text.Encoding.Default))
+                {
+                    string line;
+                    TimeSpan theLeast = TimeSpan.Parse(await sr.ReadLineAsync());
+                    while ((line = await sr.ReadLineAsync()) != null)
+                    {
+                        TimeSpan ts = TimeSpan.Parse(line);
+                        if(ts < theLeast)
+                        {
+                            theLeast = ts;
+                        }
+                    }
+                    Console.WriteLine("Your best score so far:");
+                    Console.WriteLine(theLeast);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Trying to read a {writePath} file: {ex}");
+            }
         }
 
         /// <summary>
@@ -305,7 +357,7 @@ namespace QuasiGaame
                     break;
             }
             Console.WriteLine($"You have chosen {mode} mode. Goodluck!");
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(2000);
             //user can rechoose ?
             //Console.ReadKey();
         }
@@ -506,6 +558,7 @@ namespace QuasiGaame
          * добавить выход из меню
          * что такое гейм что такое филд, пересмотреть все методы
          * число бомб рандомно не всегда совпадает с заданным
+         * 3,2,1 перед стартом?
         */
 
 
