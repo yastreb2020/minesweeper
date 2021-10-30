@@ -1,4 +1,5 @@
 ﻿using System;
+using Serilog;
 
 /*namespace SerilogExample
 {
@@ -34,6 +35,12 @@ namespace QuasiGaame
     {
         static void Main(string[] args)
         {
+            // logging configuration
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.File("logs/myapp.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
+
             var game = new Minesweeper();
             game.StartGame();
         }

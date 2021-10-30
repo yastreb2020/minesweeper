@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using Serilog;
+using System.Diagnostics;
+using System.IO;
 
 namespace QuasiGaame
 {
@@ -45,6 +47,8 @@ namespace QuasiGaame
         /// </summary>
         const string markSign = "?";
 
+        const string pauseSign = "*";
+
         /// <summary>
         /// used to save a foreground color before changing and return to it after
         /// </summary>
@@ -67,6 +71,8 @@ namespace QuasiGaame
         /// </summary>
         int coorI, coorJ;
 
+        Stopwatch stopwatch = new Stopwatch();
+
         /// <summary>
         /// initialization of game variables
         /// </summary>
@@ -84,25 +90,25 @@ namespace QuasiGaame
             CreateField();
             UpdateField();
             Console.SetCursorPosition(0, 0);
+
         }
 
         /// <summary>
         /// Starts a game
         /// </summary>
-        public void StartGame()
+        internal void StartGame()
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.File("logs/myapp.txt", rollingInterval: RollingInterval.Day)
-                .CreateLogger();
 
-            Log.Information("Ah, there you are!");
+            Log.Information("Game started.");
 
 
             StartMenu();
             GameInit();
 
             ConsoleKeyInfo keyinfo;
+
+            //starting to count game time
+            stopwatch.Restart();
 
             while (true)
             {
@@ -148,6 +154,7 @@ namespace QuasiGaame
 
                         if (field[coorI, coorJ] == bombSign)
                         {
+                            stopwatch.Stop();
                             Console.WriteLine("Loser.");
                             // + stop counts
                             GameLost();
@@ -189,6 +196,7 @@ namespace QuasiGaame
                     case ConsoleKey.P:
                     case ConsoleKey.X:
                     case ConsoleKey.Escape:
+                        stopwatch.Stop();
                         Pause();
                         break;
 
@@ -196,6 +204,7 @@ namespace QuasiGaame
                 
                 if(numOfOpenCells == rows * cols - numOfBombs)
                 {
+                    stopwatch.Stop(); //add it to the next method?
                     GameWon();
                 }
 
@@ -248,6 +257,7 @@ namespace QuasiGaame
         // do i need those two?.. for the future?.. like keeping records?
         void GameLost()
         {
+            Log.Information("Game lost.");
             Console.WriteLine("\nYou've lost! Don't get upset - you've fought like a real warrior. Try again.");
             Console.WriteLine("Press any key to escape to the main menu.");
             Console.ReadKey();
@@ -257,6 +267,7 @@ namespace QuasiGaame
 
         void GameWon()
         {
+            Log.Information("Game won in {0:hh\\:mm\\:ss}", stopwatch.Elapsed);
             Console.WriteLine("Congrats! You've won! Wanna show off again?");
             Console.WriteLine("Press any key to escape to the main menu.");
             Console.ReadKey();
@@ -365,6 +376,8 @@ namespace QuasiGaame
 
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine($"Mines Total: {numOfBombs} \t Mines Marked: {numOfMarks}");
+            Console.WriteLine($"Time spent: {stopwatch.Elapsed.Minutes}:{stopwatch.Elapsed.Seconds}");
+            Console.WriteLine("\nPress P, X or Ecsape to pause the game");
         }
 
         /// <summary>
@@ -445,10 +458,9 @@ namespace QuasiGaame
             return cnt;
         }
 
-        string pauseSign = "*";
-
         void Pause()
         {
+            Log.Information("In pause mode");
             Console.Clear();
             for(int i = 0; i < rows; i++)
             {
@@ -461,20 +473,28 @@ namespace QuasiGaame
             Console.WriteLine("\nYou're in a pause mode. Press Enter to continue.");
             Console.WriteLine("To escape to the main menu and finish the game press Esc.");
 
-            switch(Console.ReadKey().Key)
+            try
             {
-                case ConsoleKey.Enter:
-                    UpdateField();
-                    break;
-                case ConsoleKey.Escape:
-                    StartMenu();
-                    break;
+                switch (Console.ReadKey().Key)
+                {
+                    case ConsoleKey.Enter:
+                        stopwatch.Start();
+                        UpdateField();
+                        break;
+                    case ConsoleKey.Escape:
+                        StartMenu();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Raised exception in pause mode: {0}", ex);
             }
         }
 
         /*ЧТО НЕ ТАК:
          * написать правила игры, описание клавиши
-         * режим паузы в перспективе
+         * режим паузы в перспективе +
          * добавить возможность изменить выбор режима игры
          * добавить время игры
          * добавить систему очков
